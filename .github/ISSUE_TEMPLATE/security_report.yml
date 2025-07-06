@@ -1,0 +1,175 @@
+name: 🔒 Security Issue
+description: Report a security vulnerability (Use only for non-critical issues)
+title: "[SECURITY] "
+labels: ["security", "high-priority"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## ⚠️ CRITICAL SECURITY VULNERABILITIES
+        
+        **🚨 For critical security vulnerabilities, DO NOT create a public issue.**
+        
+        Instead, please email: **security@nexus-panel.com**
+        
+        This form is only for:
+        - Security improvements
+        - Non-critical security suggestions
+        - Security feature requests
+        - Documentation security issues
+
+  - type: checkboxes
+    id: severity-check
+    attributes:
+      label: Severity Confirmation
+      description: Please confirm this is not a critical vulnerability
+      options:
+        - label: This is NOT a critical security vulnerability
+          required: true
+        - label: This does NOT allow unauthorized access to user data
+          required: true
+        - label: This does NOT allow privilege escalation
+          required: true
+        - label: This does NOT allow remote code execution
+          required: true
+
+  - type: dropdown
+    id: issue-type
+    attributes:
+      label: Security Issue Type
+      description: What type of security issue is this?
+      options:
+        - Security Enhancement - Suggestion to improve security
+        - Security Feature Request - New security feature
+        - Documentation Security - Security documentation issues
+        - Security Best Practice - Code security improvements
+        - Dependency Security - Outdated or vulnerable dependencies
+        - Configuration Security - Security configuration improvements
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Describe the security concern or suggestion
+      placeholder: |
+        Provide a clear description of the security issue or improvement.
+        Include why this is a security concern and potential impact.
+    validations:
+      required: true
+
+  - type: textarea
+    id: current-behavior
+    attributes:
+      label: Current Behavior
+      description: How does the current implementation work?
+      placeholder: Describe the current security behavior or implementation...
+
+  - type: textarea
+    id: suggested-improvement
+    attributes:
+      label: Suggested Improvement
+      description: How could this be improved from a security perspective?
+      placeholder: |
+        Describe your suggested security improvement:
+        - What changes would you recommend?
+        - How would this enhance security?
+        - Are there industry best practices to follow?
+
+  - type: dropdown
+    id: security-category
+    attributes:
+      label: Security Category
+      description: Which security area does this relate to?
+      options:
+        - Authentication - Login and user verification
+        - Authorization - Permission and access control
+        - Input Validation - Data sanitization and validation
+        - Rate Limiting - Abuse prevention
+        - Data Protection - Data encryption and privacy
+        - Network Security - Communication security
+        - Dependency Security - Third-party libraries
+        - Configuration Security - Setup and deployment
+        - Monitoring - Security logging and detection
+        - Documentation - Security documentation
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact-assessment
+    attributes:
+      label: Impact Assessment
+      description: What would be the impact of implementing this improvement?
+      placeholder: |
+        - Security benefits gained
+        - Potential risks mitigated
+        - User experience impact
+        - Implementation complexity
+
+  - type: textarea
+    id: references
+    attributes:
+      label: References
+      description: Include any relevant security references or standards
+      placeholder: |
+        - Links to security best practices
+        - OWASP guidelines
+        - Industry standards
+        - Similar implementations
+
+  - type: checkboxes
+    id: affected-components
+    attributes:
+      label: Affected Components
+      description: Which components are affected?
+      options:
+        - label: Discord bot code
+        - label: API endpoints
+        - label: Database operations
+        - label: Authentication system
+        - label: Permission system
+        - label: Rate limiting
+        - label: Input validation
+        - label: Error handling
+        - label: Logging system
+        - label: Configuration files
+        - label: Documentation
+
+  - type: textarea
+    id: implementation-suggestions
+    attributes:
+      label: Implementation Suggestions
+      description: How could this be implemented?
+      placeholder: |
+        Technical suggestions for implementation:
+        - Code changes needed
+        - Configuration updates
+        - Testing requirements
+        - Documentation updates
+
+  - type: checkboxes
+    id: responsible-disclosure
+    attributes:
+      label: Responsible Disclosure
+      description: Security disclosure commitment
+      options:
+        - label: I have followed responsible disclosure practices
+          required: true
+        - label: I have not shared this information publicly elsewhere
+          required: true
+        - label: I understand this will be reviewed by the security team
+          required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ## 📞 Security Contact Information
+        
+        **For urgent security matters:**
+        - **Email**: security@nexus-panel.com
+        - **Response Time**: 24 hours for critical issues
+        - **PGP Key**: Available on request
+        
+        **Security Researchers:**
+        We welcome security research and offer recognition for responsible disclosure.

@@ -1,0 +1,174 @@
+name: ✨ Feature Request
+description: Suggest a new feature for Nexus Panel Bot
+title: "[FEATURE] "
+labels: ["enhancement", "needs-review"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 🔍 Transparency Notice
+        Feature requests are publicly visible as part of our open development process.
+        Your suggestion will be reviewed by the community and development team.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What problem would this feature solve?
+      placeholder: |
+        Is your feature request related to a problem? Please describe.
+        A clear and concise description of what the problem is.
+        Ex. I'm always frustrated when [...]
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: What would you like to happen?
+      placeholder: |
+        A clear and concise description of what you want to happen.
+        Include any specific implementation details if you have them.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: What alternatives have you considered?
+      placeholder: |
+        A clear and concise description of any alternative solutions 
+        or features you've considered.
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Feature Category
+      description: What category does this feature belong to?
+      options:
+        - Commands - New bot commands
+        - Automation - Workflow improvements
+        - Security - Security enhancements
+        - Analytics - Data and reporting
+        - Moderation - Auto-moderation features
+        - UI/UX - User interface improvements
+        - API - API and integration features
+        - Performance - Performance improvements
+        - Documentation - Documentation improvements
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How important is this feature to you?
+      options:
+        - Low - Nice to have
+        - Medium - Would be helpful
+        - High - Important for my use case
+        - Critical - Essential for my workflow
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: user-type
+    attributes:
+      label: User Type
+      description: What type of user would benefit from this feature?
+      options:
+        - label: Server administrators
+        - label: Moderators
+        - label: Regular members
+        - label: Bot developers
+        - label: Server owners
+
+  - type: input
+    id: server-size
+    attributes:
+      label: Server Size Context
+      description: What size server would this feature benefit?
+      placeholder: e.g., Small (1-100), Medium (100-1000), Large (1000+), Any size
+
+  - type: textarea
+    id: use-cases
+    attributes:
+      label: Use Cases
+      description: Describe specific scenarios where this feature would be used
+      placeholder: |
+        1. When [situation], users would [action]
+        2. In [context], this feature would help [benefit]
+        3. For [user type], this would solve [problem]
+
+  - type: textarea
+    id: implementation
+    attributes:
+      label: Implementation Ideas
+      description: If you have ideas about how this could be implemented, share them
+      placeholder: |
+        - Technical approach suggestions
+        - Integration points with existing features
+        - Configuration options needed
+
+  - type: checkboxes
+    id: security-considerations
+    attributes:
+      label: Security Considerations
+      description: Have you considered the security implications?
+      options:
+        - label: This feature has no security implications
+        - label: This feature may require additional permission checks
+        - label: This feature may need rate limiting
+        - label: This feature requires security review
+
+  - type: checkboxes
+    id: transparency-impact
+    attributes:
+      label: Transparency Impact
+      description: How does this feature align with our transparency commitment?
+      options:
+        - label: This feature enhances transparency
+        - label: This feature maintains current transparency levels
+        - label: This feature may require transparency considerations
+        - label: I'm not sure about transparency impact
+
+  - type: textarea
+    id: examples
+    attributes:
+      label: Examples or Mockups
+      description: If you have examples, mockups, or references, include them here
+      placeholder: |
+        - Links to similar features in other bots
+        - Screenshots or mockups
+        - Example commands or workflows
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution Interest
+      description: Would you be interested in contributing to this feature?
+      options:
+        - label: I would like to help implement this feature
+        - label: I can help with testing this feature
+        - label: I can help with documentation for this feature
+        - label: I prefer to just suggest and let others implement
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Add any other context, screenshots, or information about the feature request
+
+  - type: checkboxes
+    id: transparency-commitment
+    attributes:
+      label: Transparency Commitment
+      description: Our open development process
+      options:
+        - label: I understand this feature request will be publicly reviewed
+          required: true
+        - label: I'm open to community discussion and feedback on this idea
+          required: true
