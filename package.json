@@ -1,0 +1,25 @@
+{
+  "name": "nexus-panel-bot",
+  "version": "1.0.0",
+  "description": "The Discord bot for Nexus Panel.",
+  "main": "dist/index.js",
+  "private": true,
+  "scripts": {
+    "dev": "nodemon src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.8",
+    "bullmq": "^5.8.2",
+    "discord.js": "^14.15.3",
+    "dotenv": "^16.4.5",
+    "ioredis": "^5.4.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.7",
+    "nodemon": "^3.1.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
+  }
+}

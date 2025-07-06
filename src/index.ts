@@ -1,0 +1,561 @@
+// nexus-panel/bot/src/index.ts
+
+import { Client, Events, GatewayIntentBits, REST, Routes, SlashCommandBuilder, EmbedBuilder } from 'discord.js';
+import { Queue } from 'bullmq';
+import dotenv from 'dotenv';
+import axios from 'axios';
+
+// Load environment variables from the root .env file
+dotenv.config({ path: '../.env' });
+
+console.log('🤖 Starting Nexus Panel Bot...');
+
+// --- Queue Setup ---
+// This queue instance is a "producer" that adds jobs.
+const QUEUE_NAME = 'workflow-jobs';
+const workflowQueue = new Queue(QUEUE_NAME, {
+  connection: {
+    // This connects to the 'redis' service defined in docker-compose.yml
+    host: process.env.REDIS_HOST || 'redis', 
+    port: parseInt(process.env.REDIS_PORT || '6379'),
+  },
+});
+
+// --- Discord Client Setup ---
+// We need specific intents to receive events like a member joining and messages.
+const client = new Client({
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildVoiceStates,
+    GatewayIntentBits.GuildBans,
+    GatewayIntentBits.GuildMessageReactions,
+  ],
+});
+
+// --- Slash Commands Setup ---
+const commands = [
+  new SlashCommandBuilder()
+    .setName('shop')
+    .setDescription('View and purchase available roles in this server')
+];
+
+// --- PayPal Checkout Helper Function ---
+async function generatePayPalCheckoutLink(roleId: string, guildId: string, userId: string, apiKey: string, backendUrl: string): Promise<string> {
+  try {
+    const response = await axios.post(
+      `${backendUrl}/api/checkout/${roleId}`,
+      {
+        userId: userId,
+        guildId: guildId,
+        provider: 'paypal'
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'X-Internal-Request': 'true',
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    return response.data.url || `https://app.nexus-panel.com/shop/error`;
+  } catch (error) {
+    console.error('Error generating PayPal checkout link:', error);
+    return `https://app.nexus-panel.com/shop/unavailable`;
+  }
+}
+
+// --- Event Handlers ---
+
+// This event fires once when the bot is ready and logged in.
+client.once(Events.ClientReady, async (readyClient) => {
+  console.log(`✅ Bot is ready! Logged in as ${readyClient.user.tag}`);
+  
+  // Register slash commands
+  const rest = new REST().setToken(process.env.DISCORD_BOT_TOKEN!);
+  
+  try {
+    console.log('🔄 Started refreshing application (/) commands.');
+    
+    // Register commands globally (can take up to 1 hour to propagate)
+    // For faster testing, use guild-specific registration: Routes.applicationGuildCommands(clientId, guildId)
+    await rest.put(
+      Routes.applicationCommands(readyClient.user.id),
+      { body: commands.map(command => command.toJSON()) }
+    );
+    
+    console.log('✅ Successfully reloaded application (/) commands.');
+  } catch (error) {
+    console.error('❌ Error registering slash commands:', error);
+  }
+});
+
+// This event fires every time a new member joins a guild the bot is in.
+client.on(Events.GuildMemberAdd, async (member) => {
+  try {
+    console.log(`New member joined: ${member.user.tag} in guild ${member.guild.name}`);
+
+    // This is the data that will be passed to our worker.
+    const jobData = {
+      triggerType: 'ON_MEMBER_JOIN',
+      guildId: member.guild.id,
+      memberId: member.id,
+      // We can pass along any other relevant data
+      userDetails: {
+        id: member.user.id,
+        username: member.user.username,
+        isBot: member.user.bot,
+        createdAt: member.user.createdAt.toISOString(),
+      },
+    };
+
+    // Add a job to the queue.
+    // The first argument is a descriptive name for the job.
+    await workflowQueue.add('process-member-join-event', jobData);
+
+    console.log(`📥 Added job to queue for ${member.user.tag} joining.`);
+  } catch (error) {
+    console.error('Error adding job to queue:', error);
+  }
+});
+
+// This event fires every time a message is sent in a guild the bot is in.
+client.on(Events.MessageCreate, async (message) => {
+  try {
+    // Skip bot messages unless specifically configured to include them
+    if (message.author.bot) return;
+    
+    // Skip DM messages for auto-moderation
+    if (!message.guild) return;
+    
+    console.log(`New message from ${message.author.tag} in guild ${message.guild.name}: ${message.content}`);
+
+    const jobData = {
+      triggerType: 'ON_MESSAGE_SENT',
+      guildId: message.guild.id,
+      memberId: message.author.id,
+      channelId: message.channel.id,
+      messageId: message.id,
+      messageContent: message.content,
+      userDetails: {
+        id: message.author.id,
+        username: message.author.username,
+        isBot: message.author.bot,
+        createdAt: message.author.createdAt.toISOString(),
+      },
+    };
+
+    // Add job for workflow processing
+    await workflowQueue.add('process-message-event', jobData);
+    
+    // Add separate job for auto-moderation processing
+    const autoModerationData = {
+      messageId: message.id,
+      channelId: message.channel.id,
+      guildId: message.guild.id,
+      userId: message.author.id,
+      content: message.content,
+      timestamp: new Date().toISOString()
+    };
+    
+    await workflowQueue.add('process-auto-moderation', autoModerationData);
+
+    console.log(`📥 Added jobs to queue for message from ${message.author.tag}.`);
+  } catch (error) {
+    console.error('Error adding job to queue:', error);
+  }
+});
+
+// This event fires when a member leaves a guild
+client.on(Events.GuildMemberRemove, async (member) => {
+  try {
+    console.log(`Member left: ${member.user.tag} from guild ${member.guild.name}`);
+
+    const jobData = {
+      triggerType: 'ON_MEMBER_LEAVE',
+      guildId: member.guild.id,
+      memberId: member.id,
+      userDetails: {
+        id: member.user.id,
+        username: member.user.username,
+        isBot: member.user.bot,
+        createdAt: member.user.createdAt.toISOString(),
+      },
+    };
+
+    await workflowQueue.add('process-member-leave-event', jobData);
+    console.log(`📥 Added job to queue for ${member.user.tag} leaving.`);
+  } catch (error) {
+    console.error('Error adding job to queue:', error);
+  }
+});
+
+// This event fires when a member's roles are updated
+client.on(Events.GuildMemberUpdate, async (oldMember, newMember) => {
+  try {
+    // Check if roles changed
+    const oldRoles = oldMember.roles.cache.map(role => role.id);
+    const newRoles = newMember.roles.cache.map(role => role.id);
+    
+    if (JSON.stringify(oldRoles) !== JSON.stringify(newRoles)) {
+      console.log(`Member roles updated: ${newMember.user.tag} in guild ${newMember.guild.name}`);
+
+      const addedRoles = newRoles.filter(roleId => !oldRoles.includes(roleId));
+      const removedRoles = oldRoles.filter(roleId => !newRoles.includes(roleId));
+
+      const jobData = {
+        triggerType: 'ON_ROLE_UPDATE',
+        guildId: newMember.guild.id,
+        memberId: newMember.id,
+        roleChanges: {
+          added: addedRoles,
+          removed: removedRoles,
+          before: oldRoles,
+          after: newRoles,
+        },
+        userDetails: {
+          id: newMember.user.id,
+          username: newMember.user.username,
+          isBot: newMember.user.bot,
+        },
+      };
+
+      await workflowQueue.add('process-role-update-event', jobData);
+      console.log(`📥 Added job to queue for ${newMember.user.tag} role update.`);
+    }
+  } catch (error) {
+    console.error('Error adding job to queue:', error);
+  }
+});
+
+// This event fires when a channel is created
+client.on(Events.ChannelCreate, async (channel) => {
+  try {
+    if (!('guild' in channel) || !channel.guild) return; // Skip DM channels
+
+    console.log(`Channel created: ${channel.name} in guild ${channel.guild.name}`);
+
+    const jobData = {
+      triggerType: 'ON_CHANNEL_CREATE',
+      guildId: channel.guild.id,
+      channelId: channel.id,
+      channelDetails: {
+        id: channel.id,
+        name: channel.name,
+        type: channel.type,
+        createdAt: channel.createdAt?.toISOString(),
+      },
+    };
+
+    await workflowQueue.add('process-channel-create-event', jobData);
+    console.log(`📥 Added job to queue for channel ${channel.name} creation.`);
+  } catch (error) {
+    console.error('Error adding job to queue:', error);
+  }
+});
+
+// This event fires when a channel is deleted
+client.on(Events.ChannelDelete, async (channel) => {
+  try {
+    if (!('guild' in channel) || !channel.guild) return; // Skip DM channels
+
+    console.log(`Channel deleted: ${channel.name} in guild ${channel.guild.name}`);
+
+    const jobData = {
+      triggerType: 'ON_CHANNEL_DELETE',
+      guildId: channel.guild.id,
+      channelId: channel.id,
+      channelDetails: {
+        id: channel.id,
+        name: channel.name,
+        type: channel.type,
+      },
+    };
+
+    await workflowQueue.add('process-channel-delete-event', jobData);
+    console.log(`📥 Added job to queue for channel ${channel.name} deletion.`);
+  } catch (error) {
+    console.error('Error adding job to queue:', error);
+  }
+});
+
+// This event fires when a member joins a voice channel
+client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
+  try {
+    // Member joined voice channel
+    if (!oldState.channel && newState.channel) {
+      console.log(`${newState.member?.user.tag} joined voice channel ${newState.channel.name}`);
+
+      const jobData = {
+        triggerType: 'ON_VOICE_JOIN',
+        guildId: newState.guild.id,
+        memberId: newState.member?.id,
+        channelId: newState.channel.id,
+        channelName: newState.channel.name,
+        userDetails: {
+          id: newState.member?.user.id,
+          username: newState.member?.user.username,
+        },
+      };
+
+      await workflowQueue.add('process-voice-join-event', jobData);
+    }
+    
+    // Member left voice channel
+    if (oldState.channel && !newState.channel) {
+      console.log(`${oldState.member?.user.tag} left voice channel ${oldState.channel.name}`);
+
+      const jobData = {
+        triggerType: 'ON_VOICE_LEAVE',
+        guildId: oldState.guild.id,
+        memberId: oldState.member?.id,
+        channelId: oldState.channel.id,
+        channelName: oldState.channel.name,
+        userDetails: {
+          id: oldState.member?.user.id,
+          username: oldState.member?.user.username,
+        },
+      };
+
+      await workflowQueue.add('process-voice-leave-event', jobData);
+    }
+  } catch (error) {
+    console.error('Error adding job to queue:', error);
+  }
+});
+
+// This event fires when a member is banned
+client.on(Events.GuildBanAdd, async (ban) => {
+  try {
+    console.log(`Member banned: ${ban.user.tag} from guild ${ban.guild.name}`);
+
+    const jobData = {
+      triggerType: 'ON_MEMBER_BAN',
+      guildId: ban.guild.id,
+      memberId: ban.user.id,
+      reason: ban.reason,
+      userDetails: {
+        id: ban.user.id,
+        username: ban.user.username,
+        isBot: ban.user.bot,
+      },
+    };
+
+    await workflowQueue.add('process-member-ban-event', jobData);
+    console.log(`📥 Added job to queue for ${ban.user.tag} ban.`);
+  } catch (error) {
+    console.error('Error adding job to queue:', error);
+  }
+});
+
+// This event fires when a member is unbanned
+client.on(Events.GuildBanRemove, async (ban) => {
+  try {
+    console.log(`Member unbanned: ${ban.user.tag} from guild ${ban.guild.name}`);
+
+    const jobData = {
+      triggerType: 'ON_MEMBER_UNBAN',
+      guildId: ban.guild.id,
+      memberId: ban.user.id,
+      userDetails: {
+        id: ban.user.id,
+        username: ban.user.username,
+        isBot: ban.user.bot,
+      },
+    };
+
+    await workflowQueue.add('process-member-unban-event', jobData);
+    console.log(`📥 Added job to queue for ${ban.user.tag} unban.`);
+  } catch (error) {
+    console.error('Error adding job to queue:', error);
+  }
+});
+
+// This event fires when a reaction is added to a message
+client.on(Events.MessageReactionAdd, async (reaction, user) => {
+  try {
+    if (user.bot) return; // Skip bot reactions
+    if (!reaction.message.guild) return; // Skip DM reactions
+
+    console.log(`Reaction added: ${reaction.emoji.name} by ${user.tag} in guild ${reaction.message.guild.name}`);
+
+    const jobData = {
+      triggerType: 'ON_REACTION_ADD',
+      guildId: reaction.message.guild.id,
+      memberId: user.id,
+      channelId: reaction.message.channel.id,
+      messageId: reaction.message.id,
+      emoji: {
+        name: reaction.emoji.name,
+        id: reaction.emoji.id,
+        animated: reaction.emoji.animated,
+      },
+      userDetails: {
+        id: user.id,
+        username: user.username,
+        isBot: user.bot,
+      },
+    };
+
+    await workflowQueue.add('process-reaction-add-event', jobData);
+    console.log(`📥 Added job to queue for reaction from ${user.tag}.`);
+  } catch (error) {
+    console.error('Error adding job to queue:', error);
+  }
+});
+
+// --- Slash Command Interaction Handler ---
+client.on(Events.InteractionCreate, async (interaction) => {
+  if (!interaction.isChatInputCommand()) return;
+
+  if (interaction.commandName === 'shop') {
+    try {
+      await interaction.deferReply({ ephemeral: true });
+
+      const guildId = interaction.guildId;
+      if (!guildId) {
+        await interaction.editReply('❌ This command can only be used in a server.');
+        return;
+      }
+
+      // Fetch monetized roles from backend API
+      const backendUrl = process.env.BACKEND_API_URL || 'http://backend:3001';
+      const apiKey = process.env.BOT_INTERNAL_API_KEY;
+      
+      if (!apiKey) {
+        await interaction.editReply('❌ Bot configuration error. Please contact server administrators.');
+        return;
+      }
+      
+      const response = await axios.get(`${backendUrl}/api/guilds/${guildId}/roles`, {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'X-Internal-Request': 'true'
+        }
+      });
+
+      const allRoles = response.data;
+      const monetizedRoles = allRoles.filter((role: any) => role.price && role.paypalProductId);
+
+      if (monetizedRoles.length === 0) {
+        await interaction.editReply('🛒 **No roles available for purchase in this server.**\n\nContact server administrators to set up role monetization.');
+        return;
+      }
+
+      // Create embed with available roles
+      const embed = new EmbedBuilder()
+        .setTitle('🛒 **Server Role Shop**')
+        .setDescription('Purchase roles to get exclusive access and perks!')
+        .setColor(0x3498db)
+        .setTimestamp();
+
+      let embedDescription = '';
+      let totalRoles = 0;
+
+      for (const role of monetizedRoles) {
+        totalRoles++;
+        const price = role.price ? `$${Number(role.price).toFixed(2)}` : 'Free';
+        
+        // Generate dynamic PayPal checkout link
+        const paymentUrl = await generatePayPalCheckoutLink(role.id, guildId, interaction.user.id, apiKey, backendUrl);
+        
+        embedDescription += `\n💎 **${role.name}** - ${price}\n`;
+        embedDescription += `🅿️ PayPal • [Purchase Here](${paymentUrl})\n`;
+        embedDescription += `────────────────\n`;
+      }
+
+      embed.setDescription(`Available roles in **${interaction.guild?.name}**:\n${embedDescription}`);
+      embed.setFooter({ 
+        text: `${totalRoles} role${totalRoles !== 1 ? 's' : ''} available • Powered by Nexus Panel`,
+        iconURL: interaction.client.user.displayAvatarURL()
+      });
+
+      await interaction.editReply({ embeds: [embed] });
+
+    } catch (error) {
+      console.error('Error in /shop command:', error);
+      await interaction.editReply('❌ An error occurred while fetching the role shop. Please try again later.');
+    }
+  }
+});
+
+// --- Guild Create Handler (Bot joins new guild) ---
+client.on(Events.GuildCreate, async (guild) => {
+  try {
+    console.log(`🎯 Bot joined new guild: ${guild.name} (${guild.id})`);
+    
+    const backendUrl = process.env.BACKEND_API_URL || 'http://backend:3001';
+    const apiKey = process.env.BOT_INTERNAL_API_KEY;
+    
+    if (!apiKey) {
+      console.error('❌ BOT_INTERNAL_API_KEY not configured for guildCreate handler');
+      return;
+    }
+
+    // Notify backend that bot joined a new guild
+    // Backend will check server limits and set appropriate status
+    try {
+      const response = await axios.post(
+        `${backendUrl}/api/bot/guild-joined`,
+        {
+          guildId: guild.id,
+          guildName: guild.name,
+          memberCount: guild.memberCount,
+          ownerId: guild.ownerId
+        },
+        {
+          headers: {
+            'X-Bot-API-Key': apiKey,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      const data = response.data;
+      console.log(`✅ Guild join processed: ${guild.name} - Status: ${data.status}`);
+      
+      if (data.status === 'degraded') {
+        console.log(`⚠️  Guild ${guild.name} set to DEGRADED mode - plan limits exceeded`);
+        
+        // Send welcome message explaining limitations
+        const systemChannel = guild.systemChannel;
+        if (systemChannel) {
+          const embed = new EmbedBuilder()
+            .setColor(0xFF6B35)
+            .setTitle('🎯 Nexus Panel Bot Joined!')
+            .setDescription('Welcome! Your server has been added but requires a plan upgrade to activate all features.')
+            .addFields(
+              {
+                name: '⚠️ Limited Access',
+                value: 'Your current plan allows limited servers. Upgrade your plan to unlock full functionality.',
+                inline: false
+              },
+              {
+                name: '🚀 Get Started',
+                value: 'Visit your [Nexus Panel Dashboard](https://app.nexus-panel.com) to upgrade your plan.',
+                inline: false
+              }
+            )
+            .setTimestamp();
+
+          await systemChannel.send({ embeds: [embed] });
+        }
+      } else {
+        console.log(`✅ Guild ${guild.name} activated successfully`);
+      }
+      
+    } catch (error: any) {
+      console.error('❌ Error notifying backend of guild join:', error.response?.data || error.message);
+    }
+    
+  } catch (error) {
+    console.error('❌ Error in guildCreate handler:', error);
+  }
+});
+
+// --- Login ---
+// Log the bot in to Discord using the token from our .env file.
+client.login(process.env.DISCORD_BOT_TOKEN);
