@@ -5,201 +5,201 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-4.9+-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 
-## 🌟 **EL ÚNICO BOT DE DISCORD CON TRANSPARENCIA TOTAL**
+## 🌟 **THE ONLY DISCORD BOT WITH COMPLETE TRANSPARENCY**
 
-Nexus Panel es el primer y único bot de Discord que te muestra **exactamente** qué hace, cuándo lo hace, y por qué es completamente seguro. Mientras otros bots piden confianza ciega, nosotros la ganamos con transparencia total.
+Nexus Panel is the first and only Discord bot that shows you **exactly** what it does, when it does it, and why it's completely safe. While other bots ask for blind trust, we earn it through complete transparency.
 
-### 🎯 **¿Por qué Nexus Panel es Diferente?**
+### 🎯 **Why Nexus Panel is Different?**
 
-- ✅ **Transparencia Completa**: Cada acción es visible y documentada
-- ✅ **Código Abierto**: Todo el código está disponible para revisión
-- ✅ **Restricciones Programáticas**: Límites estrictos codificados en el software
-- ✅ **Doble Invitación**: Elige entre permisos específicos o administrator
-- ✅ **Dashboard Público**: Ve la actividad del bot en tiempo real
+- ✅ **Complete Transparency**: Every action is visible and documented
+- ✅ **Open Source**: All code is available for review
+- ✅ **Programmatic Restrictions**: Strict limits coded into the software
+- ✅ **Dual Invitation**: Choose between specific permissions or administrator
+- ✅ **Public Dashboard**: See bot activity in real-time
 
-## 🔐 **INFORMACIÓN DE SEGURIDAD**
+## 🔐 **SECURITY INFORMATION**
 
-### **Bot Transparencia & Seguridad**
-👀 **[Ver Página de Transparencia Completa](https://app.nexus-panel.com/bot-security)**
+### **Bot Transparency & Security**
+👀 **[View Complete Transparency Page](https://app.nexus-panel.com/bot-security)**
 
-### **Restricciones Programáticas Implementadas:**
+### **Implemented Programmatic Restrictions:**
 
-El bot **NO PUEDE** hacer lo siguiente, incluso con permisos de administrator:
+The bot **CANNOT** do the following, even with administrator permissions:
 
-- ❌ **Banear al dueño del servidor**
-- ❌ **Banear administradores** 
-- ❌ **Eliminar canales importantes**
-- ❌ **Modificar roles superiores**
-- ❌ **Exceder límites de velocidad programados**
+- ❌ **Ban server owner**
+- ❌ **Ban administrators** 
+- ❌ **Delete important channels**
+- ❌ **Modify higher roles**
+- ❌ **Exceed programmed rate limits**
 
-### **Límites de Velocidad Automáticos:**
+### **Automatic Rate Limits:**
 
-- **General**: 100 acciones por minuto
-- **Roles**: 50 cambios por hora
-- **Mensajes**: 30 mensajes por minuto
-- **Baneos**: 5 baneos por hora
-- **Expulsiones**: 10 expulsiones por hora
-- **Canales**: 3 creaciones por hora
+- **General**: 100 actions per minute
+- **Roles**: 50 changes per hour
+- **Messages**: 30 messages per minute
+- **Bans**: 5 bans per hour
+- **Kicks**: 10 kicks per hour
+- **Channels**: 3 creations per hour
 
-### **Monitoreo en Tiempo Real:**
+### **Real-Time Monitoring:**
 
-- 📊 **Dashboard Público**: Estadísticas en vivo de actividad
-- 📝 **Logs Completos**: Registro de todas las acciones
-- 🚨 **Alertas Automáticas**: Detección de actividad anómala
-- 🛑 **Parada de Emergencia**: Control manual inmediato
+- 📊 **Public Dashboard**: Live activity statistics
+- 📝 **Complete Logs**: Record of all actions
+- 🚨 **Automatic Alerts**: Anomalous activity detection
+- 🛑 **Emergency Stop**: Immediate manual control
 
-## 🚀 **CARACTERÍSTICAS PRINCIPALES**
+## 🚀 **KEY FEATURES**
 
-### **⚡ Automatización de Workflows**
-- Triggers automáticos para eventos de Discord
-- Acciones personalizables
-- Lógica condicional avanzada
-- 15+ triggers disponibles
-- 20+ acciones automáticas
+### **⚡ Workflow Automation**
+- Automatic triggers for Discord events
+- Customizable actions
+- Advanced conditional logic
+- 15+ available triggers
+- 20+ automatic actions
 
-### **💰 Monetización de Roles**
-- Venta de roles premium con PayPal
-- Asignación automática de roles
-- Revenue sharing automático (90-95% para ti)
-- Gestión de suscripciones
-- Dashboard de ventas completo
+### **💰 Role Monetization**
+- Sell premium roles with PayPal
+- Automatic role assignment
+- Automatic revenue sharing (90-95% for you)
+- Subscription management
+- Complete sales dashboard
 
-### **📊 Analytics Avanzados**
-- Métricas de actividad en tiempo real
-- Análisis de crecimiento del servidor
-- Engagement de miembros
-- Exportación de datos
-- Reportes automáticos
+### **📊 Advanced Analytics**
+- Real-time activity metrics
+- Server growth analysis
+- Member engagement
+- Data export
+- Automatic reports
 
-### **🛡️ Auto-Moderación Inteligente**
-- 6 tipos de reglas de moderación
-- Procesamiento en tiempo real
-- Acciones automáticas configurables
-- Logs de moderación completos
+### **🛡️ Intelligent Auto-Moderation**
+- 6 types of moderation rules
+- Real-time processing
+- Configurable automatic actions
+- Complete moderation logs
 
-### **🎨 Personalización Completa**
-- Temas personalizados por servidor
-- Colores y branding personalizable
-- Logo personalizado
-- Interfaz multiidioma (ES/EN)
+### **🎨 Complete Customization**
+- Custom themes per server
+- Customizable colors and branding
+- Custom logo
+- Multi-language interface (ES/EN)
 
 ### **🔧 Webhooks & API**
-- API REST completa
-- Webhooks configurables
-- Integraciones con servicios externos
-- Documentación completa
+- Complete REST API
+- Configurable webhooks
+- External service integrations
+- Complete documentation
 
-## 🔗 **OPCIONES DE INVITACIÓN**
+## 🔗 **INVITATION OPTIONS**
 
-### **Opción 1: Standard (Permisos Específicos)**
-Recomendado para nuevos usuarios y servidores pequeños.
+### **Option 1: Standard (Specific Permissions)**
+Recommended for new users and small servers.
 
-**Características:**
-- ✅ Workflows básicos
-- ✅ Analytics limitadas
-- ✅ Auto-moderación básica
-- ✅ Gestión de roles
-- ✅ Comandos slash básicos
+**Features:**
+- ✅ Basic workflows
+- ✅ Limited analytics
+- ✅ Basic auto-moderation
+- ✅ Role management
+- ✅ Basic slash commands
 
-**Permisos Incluidos:**
-- Gestionar roles
-- Leer mensajes
-- Enviar mensajes
-- Gestionar mensajes
-- Conectar a voz
-- Mover miembros
-- Usar comandos slash
+**Included Permissions:**
+- Manage roles
+- Read messages
+- Send messages
+- Manage messages
+- Connect to voice
+- Move members
+- Use slash commands
 
-### **Opción 2: Premium (Administrator)**
-Recomendado para servidores enterprise y configuración simplificada.
+### **Option 2: Premium (Administrator)**
+Recommended for enterprise servers and simplified setup.
 
-**Características:**
-- ✅ Funcionalidad completa
-- ✅ Setup automático
-- ✅ Soporte prioritario
-- ✅ Analytics avanzadas
-- ✅ Auto-moderación completa
-- ✅ Gestión avanzada de servidor
+**Features:**
+- ✅ Complete functionality
+- ✅ Automatic setup
+- ✅ Priority support
+- ✅ Advanced analytics
+- ✅ Complete auto-moderation
+- ✅ Advanced server management
 
-**Permisos Incluidos:**
-- Administrador (todos los permisos)
-- Configuración automática
-- Acceso completo a todas las funcionalidades
+**Included Permissions:**
+- Administrator (all permissions)
+- Automatic configuration
+- Complete access to all functionalities
 
-## 📥 **INVITAR EL BOT**
+## 📥 **INVITE THE BOT**
 
-### 🔒 **[INVITAR CON TRANSPARENCIA TOTAL](https://app.nexus-panel.com/bot-security)**
+### 🔒 **[INVITE WITH COMPLETE TRANSPARENCY](https://app.nexus-panel.com/bot-security)**
 
-Al hacer click en el enlace anterior:
-1. **Verás toda la información de seguridad**
-2. **Entenderás exactamente qué hace el bot**
-3. **Elegirás entre Standard o Premium**
-4. **Tomarás una decisión informada**
+By clicking the link above:
+1. **You'll see all security information**
+2. **You'll understand exactly what the bot does**
+3. **You'll choose between Standard or Premium**
+4. **You'll make an informed decision**
 
-## 🏗️ **ARQUITECTURA TÉCNICA**
+## 🏗️ **TECHNICAL ARCHITECTURE**
 
-### **Stack Tecnológico:**
+### **Technology Stack:**
 - **Runtime**: Node.js 18+
 - **Language**: TypeScript
 - **Bot Framework**: Discord.js v14
-- **Database**: PostgreSQL con Prisma ORM
+- **Database**: PostgreSQL with Prisma ORM
 - **Cache**: Redis
 - **Queues**: BullMQ
 - **Authentication**: JWT
 - **Payments**: PayPal API
 
-### **Estructura del Proyecto:**
+### **Project Structure:**
 ```
 nexuspanelbot/
 ├── src/
-│   ├── index.ts              # Punto de entrada principal
-│   ├── commands/             # Comandos slash
-│   ├── events/               # Event handlers de Discord
-│   ├── services/             # Lógica de negocio
-│   ├── utils/                # Utilidades
-│   └── types/                # Definiciones de tipos
+│   ├── index.ts              # Main entry point
+│   ├── commands/             # Slash commands
+│   ├── events/               # Discord event handlers
+│   ├── services/             # Business logic
+│   ├── utils/                # Utilities
+│   └── types/                # Type definitions
 ├── Dockerfile                # Container configuration
 ├── package.json              # Dependencies
 └── tsconfig.json            # TypeScript config
 ```
 
-### **Servicios Integrados:**
-- **Backend API**: Comunicación con el panel web
-- **Worker Queue**: Procesamiento de tareas en background
-- **Security Service**: Validación y límites de seguridad
-- **Analytics Service**: Recopilación de métricas
-- **Revenue Service**: Gestión de pagos y comisiones
+### **Integrated Services:**
+- **Backend API**: Communication with web panel
+- **Worker Queue**: Background task processing
+- **Security Service**: Validation and security limits
+- **Analytics Service**: Metrics collection
+- **Revenue Service**: Payment and commission management
 
-## 🔧 **INSTALACIÓN Y DESARROLLO**
+## 🔧 **INSTALLATION AND DEVELOPMENT**
 
-### **Requisitos:**
+### **Requirements:**
 - Node.js 18+
-- npm o yarn
-- Discord Application con Bot Token
+- npm or yarn
+- Discord Application with Bot Token
 - PostgreSQL Database
 - Redis Server
 
-### **Instalación:**
+### **Installation:**
 ```bash
-# Clonar el repositorio
+# Clone the repository
 git clone https://github.com/koyere/nexuspanelbot.git
 cd nexuspanelbot
 
-# Instalar dependencias
+# Install dependencies
 npm install
 
-# Configurar variables de entorno
+# Configure environment variables
 cp .env.example .env
-# Editar .env con tus configuraciones
+# Edit .env with your configurations
 
-# Compilar TypeScript
+# Compile TypeScript
 npm run build
 
-# Ejecutar el bot
+# Run the bot
 npm start
 ```
 
-### **Variables de Entorno:**
+### **Environment Variables:**
 ```env
 DISCORD_BOT_TOKEN=your_bot_token_here
 BACKEND_API_URL=http://localhost:3001
@@ -208,62 +208,62 @@ REDIS_HOST=localhost
 REDIS_PORT=6379
 ```
 
-### **Scripts Disponibles:**
+### **Available Scripts:**
 ```bash
-npm run dev          # Desarrollo con hot-reload
-npm run build        # Compilar TypeScript
-npm start            # Ejecutar en producción
-npm run test         # Ejecutar tests
-npm run lint         # Linting con ESLint
+npm run dev          # Development with hot-reload
+npm run build        # Compile TypeScript
+npm start            # Run in production
+npm run test         # Run tests
+npm run lint         # Linting with ESLint
 ```
 
-## 🤝 **CONTRIBUIR**
+## 🤝 **CONTRIBUTING**
 
-¡Las contribuciones son bienvenidas! Este proyecto es completamente open-source.
+Contributions are welcome! This project is completely open-source.
 
-### **Cómo Contribuir:**
-1. Fork el repositorio
-2. Crea una rama para tu feature (`git checkout -b feature/nueva-funcionalidad`)
-3. Commit tus cambios (`git commit -m 'Agregar nueva funcionalidad'`)
-4. Push a la rama (`git push origin feature/nueva-funcionalidad`)
-5. Abre un Pull Request
+### **How to Contribute:**
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/new-feature`)
+3. Commit your changes (`git commit -m 'Add new feature'`)
+4. Push to the branch (`git push origin feature/new-feature`)
+5. Open a Pull Request
 
-### **Áreas Donde Puedes Ayudar:**
+### **Areas Where You Can Help:**
 - 🐛 **Bug fixes**
-- ⚡ **Optimizaciones de rendimiento**
-- 📚 **Mejoras en documentación**
-- 🌍 **Traducciones a más idiomas**
-- 🔒 **Mejoras de seguridad**
-- ✨ **Nuevas características**
+- ⚡ **Performance optimizations**
+- 📚 **Documentation improvements**
+- 🌍 **Translations to more languages**
+- 🔒 **Security improvements**
+- ✨ **New features**
 
-## 📄 **LICENCIA**
+## 📄 **LICENSE**
 
-Este proyecto está licenciado bajo la Licencia MIT. Ver el archivo [LICENSE](LICENSE) para más detalles.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
 
-## 🔗 **ENLACES IMPORTANTES**
+## 🔗 **IMPORTANT LINKS**
 
-- 🌐 **[Sitio Web Oficial](https://nexus-panel.com)**
-- 📱 **[Panel de Control](https://app.nexus-panel.com)**
-- 📖 **[Documentación](https://docs.nexus-panel.com)**
-- 🔒 **[Transparencia del Bot](https://app.nexus-panel.com/bot-security)**
-- 🛡️ **[Política de Privacidad](https://app.nexus-panel.com/privacy)**
-- 💬 **[Servidor de Discord](https://discord.gg/nexuspanel)**
+- 🌐 **[Official Website](https://nexus-panel.com)**
+- 📱 **[Control Panel](https://app.nexus-panel.com)**
+- 📖 **[Documentation](https://docs.nexus-panel.com)**
+- 🔒 **[Bot Transparency](https://app.nexus-panel.com/bot-security)**
+- 🛡️ **[Privacy Policy](https://app.nexus-panel.com/privacy)**
+- 💬 **[Discord Server](https://discord.gg/nexuspanel)**
 
-## 📧 **SOPORTE Y CONTACTO**
+## 📧 **SUPPORT AND CONTACT**
 
-- **Email de Soporte**: support@nexus-panel.com
-- **Email de Privacidad**: privacy@nexus-panel.com
-- **Tiempo de Respuesta**: 48 horas máximo
-- **Soporte 24/7**: Disponible para planes Enterprise
+- **Support Email**: support@nexus-panel.com
+- **Privacy Email**: privacy@nexus-panel.com
+- **Response Time**: 48 hours maximum
+- **24/7 Support**: Available for Enterprise plans
 
-## ⭐ **¿TE GUSTA EL PROYECTO?**
+## ⭐ **DO YOU LIKE THE PROJECT?**
 
-Si encuentras útil este bot, ¡dale una estrella ⭐ al repositorio!
+If you find this bot useful, give it a star ⭐ on the repository!
 
-Comparte con otros administradores de Discord que buscan transparencia y funcionalidad completa.
+Share it with other Discord administrators looking for transparency and complete functionality.
 
 ---
 
-**🎯 Nexus Panel: El único bot de Discord con transparencia total.**
+**🎯 Nexus Panel: The only Discord bot with complete transparency.**
 
-*Mientras otros bots piden confianza ciega, nosotros la ganamos con transparencia completa.*
+*While other bots ask for blind trust, we earn it through complete transparency.*
