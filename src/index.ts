@@ -1,13 +1,24 @@
 // nexus-panel/bot/src/index.ts
 
-import { Client, Events, GatewayIntentBits, REST, Routes, SlashCommandBuilder, EmbedBuilder } from 'discord.js';
+import { Client, Events, GatewayIntentBits, REST, Routes, SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
 import { Queue } from 'bullmq';
 import dotenv from 'dotenv';
 import axios from 'axios';
 import express from 'express';
+import { BundleCommandHandler } from './commands/bundles/index';
+import * as nexusTestCommand from './commands/nexus-test';
+import * as nexusTicketPanelCommand from './commands/nexus-ticket-panel';
+import * as nexusMetricsCommand from './commands/nexus-metrics';
+import * as nexusLookupCommand from './commands/nexus-lookup';
+import * as nexusAutoCloseTestCommand from './commands/nexus-autoclose-test';
+import { handleTicketCreation } from './handlers/ticketHandler';
+import { handleTicketButton } from './handlers/ticketButtonHandler';
+import { initializeTicketAutoClose } from './services/ticketAutoClose';
+import { channelProtection } from './services/channelProtection.service';
+import { ChannelRecoveryService } from './utils/channelRecovery';
 
-// Load environment variables from .env file
-dotenv.config();
+// Load environment variables from the root .env file
+dotenv.config({ path: '../.env' });
 
 console.log('🤖 Starting Nexus Panel Bot...');
 
@@ -17,14 +28,16 @@ const QUEUE_NAME = 'workflow-jobs';
 const workflowQueue = new Queue(QUEUE_NAME, {
   connection: {
     // This connects to the 'redis' service defined in docker-compose.yml
-    host: process.env.REDIS_HOST || 'redis', 
+    host: process.env.REDIS_HOST || 'redis',
     port: parseInt(process.env.REDIS_PORT || '6379'),
+    password: process.env.REDIS_PASSWORD,
   },
 });
 
 // --- Discord Client Setup ---
 // We need specific intents to receive events like a member joining and messages.
-const client = new Client({
+// Auto-sharding configuration based on environment
+const clientOptions: any = {
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMembers,
@@ -34,14 +47,38 @@ const client = new Client({
     GatewayIntentBits.GuildBans,
     GatewayIntentBits.GuildMessageReactions,
   ],
-});
+};
+
+// Configure sharding if enabled
+if (process.env.SHARDING_ENABLED === 'true') {
+  console.log('🔀 Sharding mode enabled');
+  clientOptions.shards = process.env.SHARD_ID ? [parseInt(process.env.SHARD_ID)] : 'auto';
+  clientOptions.shardCount = process.env.SHARD_COUNT ? parseInt(process.env.SHARD_COUNT) : 'auto';
+  console.log(`📊 Shard Config: ID=${clientOptions.shards}, Count=${clientOptions.shardCount}`);
+} else {
+  console.log('⚡ Single instance mode');
+}
+
+const client = new Client(clientOptions);
 
 // --- Slash Commands Setup ---
+// Initialize bundle command handler
+const bundleHandler = new BundleCommandHandler();
+
 const commands = [
   new SlashCommandBuilder()
     .setName('shop')
-    .setDescription('View and purchase available roles in this server')
-];
+    .setDescription('View and purchase available roles in this server'),
+  
+  // Add bundles command
+  bundleHandler.createSlashCommand(),
+  
+  // Admin commands
+  nexusTestCommand.data,
+  nexusTicketPanelCommand.data,
+  nexusMetricsCommand.data,
+  nexusLookupCommand.data,
+  nexusAutoCloseTestCommand.data];
 
 // --- PayPal Checkout Helper Function ---
 async function generatePayPalCheckoutLink(roleId: string, guildId: string, userId: string, apiKey: string, backendUrl: string): Promise<string> {
@@ -81,16 +118,66 @@ client.once(Events.ClientReady, async (readyClient) => {
   try {
     console.log('🔄 Started refreshing application (/) commands.');
     
-    // Register commands globally (can take up to 1 hour to propagate)
-    // For faster testing, use guild-specific registration: Routes.applicationGuildCommands(clientId, guildId)
+    // Register commands for Nexus Support Guild (immediate propagation)
+    const NEXUS_SUPPORT_GUILD_ID = '1396972223054479494';
+    
+    // Clear existing guild commands first to prevent conflicts
     await rest.put(
-      Routes.applicationCommands(readyClient.user.id),
+      Routes.applicationGuildCommands(readyClient.user.id, NEXUS_SUPPORT_GUILD_ID),
+      { body: [] }
+    );
+    console.log('🧹 Cleared existing guild commands');
+    
+    // Register new commands
+    await rest.put(
+      Routes.applicationGuildCommands(readyClient.user.id, NEXUS_SUPPORT_GUILD_ID),
       { body: commands.map(command => command.toJSON()) }
     );
     
     console.log('✅ Successfully reloaded application (/) commands.');
+    console.log(`📊 Registered ${commands.length} commands: ${commands.map(c => c.name).join(', ')}`);
   } catch (error) {
     console.error('❌ Error registering slash commands:', error);
+  }
+  
+  // ✅ SAFETY FIRST: Activar protección de emergencia al inicio
+  try {
+    console.log('🛡️ ACTIVANDO PROTECCIONES DE SEGURIDAD CRÍTICAS...');
+    channelProtection.activateEmergencyProtection();
+    console.log('🛡️ Protecciones de emergencia activadas - TODAS las eliminaciones de canales están BLOQUEADAS');
+  } catch (error) {
+    console.error('❌ Error activando protecciones de seguridad:', error);
+  }
+
+  // ❌ RECOVERY: Servicio de recuperación de canales DESACTIVADO
+  // MOTIVO: Causa recreación automática no deseada de canales
+  // FECHA: 02 Agosto 2025 - Desactivado por solicitud del usuario
+  let recoveryService: ChannelRecoveryService;
+  try {
+    recoveryService = new ChannelRecoveryService(readyClient);
+    console.log('🔄 Servicio de recuperación de canales inicializado (INACTIVO)');
+    
+    // DESACTIVADO: Recuperación automática comentada para evitar recreación no deseada
+    /*
+    setTimeout(async () => {
+      console.log('🔄 INICIANDO RECUPERACIÓN AUTOMÁTICA DE CANALES...');
+      await recoveryService.recoverNexusSupportChannels();
+    }, 5000); // Esperar 5 segundos después del login
+    */
+    console.log('⚠️ RECOVERY SERVICE DESACTIVADO - No se ejecutará recuperación automática');
+    
+  } catch (error) {
+    console.error('❌ Error inicializando servicio de recuperación:', error);
+  }
+
+  // Initialize Ticket Auto-Close Service (CON PROTECCIONES)
+  try {
+    const autoCloseService = initializeTicketAutoClose(readyClient);
+    // NO INICIAR AUTOMÁTICAMENTE - Requiere configuración manual
+    console.log('⚠️ Ticket Auto-Close Service inicializado pero NO iniciado (protecciones activas)');
+    console.log('💡 Para activarlo, usa el comando /nexus-autoclose-test después de configurar protecciones');
+  } catch (error) {
+    console.error('❌ Error initializing Ticket Auto-Close Service:', error);
   }
 });
 
@@ -410,15 +497,53 @@ client.on(Events.MessageReactionAdd, async (reaction, user) => {
 
 // --- Slash Command Interaction Handler ---
 client.on(Events.InteractionCreate, async (interaction) => {
+  // Handle button interactions
+  if (interaction.isButton()) {
+    // Check if it's a bundle-related button
+    if (interaction.customId.includes('bundle') || interaction.customId.includes('nav_bundle') || interaction.customId.includes('purchase_') || interaction.customId.includes('details_') || interaction.customId.includes('preview_')) {
+      await bundleHandler.handleButtonInteraction(interaction);
+      return;
+    }
+    
+    // Handle ticket creation buttons
+    if (interaction.customId.startsWith('create_ticket_')) {
+      await handleTicketCreation(interaction);
+      return;
+    }
+    
+    // Handle ticket control buttons (close, claim, priority, transcript)
+    if (interaction.customId.includes('_ticket_')) {
+      await handleTicketButton(interaction);
+      return;
+    }
+  }
+
   if (!interaction.isChatInputCommand()) return;
+
+  // Handle /bundles command
+  if (interaction.commandName === 'bundles') {
+    await bundleHandler.handleSlashCommand(interaction);
+    return;
+  }
 
   if (interaction.commandName === 'shop') {
     try {
-      await interaction.deferReply({ ephemeral: true });
+      // Respond immediately to prevent timeout
+      await interaction.reply({ 
+        content: '🔄 **Loading role shop...** This may take a moment.',
+        flags: MessageFlags.Ephemeral
+      });
 
       const guildId = interaction.guildId;
       if (!guildId) {
-        await interaction.editReply('❌ This command can only be used in a server.');
+        await interaction.editReply({
+          content: '',
+          embeds: [{
+            title: '❌ Server Required',
+            description: 'This command can only be used within a Discord server.',
+            color: 0xff4757
+          }]
+        });
         return;
       }
 
@@ -427,7 +552,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
       const apiKey = process.env.BOT_INTERNAL_API_KEY;
       
       if (!apiKey) {
-        await interaction.editReply('❌ Bot configuration error. Please contact server administrators.');
+        await interaction.editReply({
+          content: '',
+          embeds: [{
+            title: '⚙️ Configuration Error',
+            description: 'Bot configuration incomplete. Please contact server administrators.',
+            color: 0xff4757
+          }]
+        });
         return;
       }
       
@@ -435,51 +567,142 @@ client.on(Events.InteractionCreate, async (interaction) => {
         headers: {
           'Authorization': `Bearer ${apiKey}`,
           'X-Internal-Request': 'true'
-        }
+        },
+        timeout: 8000 // 8 second timeout
       });
 
       const allRoles = response.data;
       const monetizedRoles = allRoles.filter((role: any) => role.price && role.paypalProductId);
 
       if (monetizedRoles.length === 0) {
-        await interaction.editReply('🛒 **No roles available for purchase in this server.**\n\nContact server administrators to set up role monetization.');
+        await interaction.editReply({
+          content: '',
+          embeds: [{
+            title: '🛒 Role Shop',
+            description: '**No premium roles available**\n\nThis server hasn\'t set up any roles for purchase yet.\n\n💡 *Server admins can monetize roles through the [Nexus Panel](https://app.nexus-panel.com)*',
+            color: 0x74b9ff,
+            thumbnail: interaction.guild?.iconURL() ? { url: interaction.guild.iconURL()! } : undefined,
+            timestamp: new Date().toISOString()
+          }]
+        });
         return;
       }
 
-      // Create embed with available roles
-      const embed = new EmbedBuilder()
-        .setTitle('🛒 **Server Role Shop**')
-        .setDescription('Purchase roles to get exclusive access and perks!')
-        .setColor(0x3498db)
-        .setTimestamp();
+      // Create modern Discord v2 embed with professional design
+      const fields = [];
+      let totalValue = 0;
 
-      let embedDescription = '';
-      let totalRoles = 0;
-
-      for (const role of monetizedRoles) {
-        totalRoles++;
-        const price = role.price ? `$${Number(role.price).toFixed(2)}` : 'Free';
+      for (const role of monetizedRoles.slice(0, 8)) { // Limit to 8 roles for better visual spacing
+        const price = Number(role.price);
+        totalValue += price;
         
         // Generate dynamic PayPal checkout link
         const paymentUrl = await generatePayPalCheckoutLink(role.id, guildId, interaction.user.id, apiKey, backendUrl);
         
-        embedDescription += `\n💎 **${role.name}** - ${price}\n`;
-        embedDescription += `🅿️ PayPal • [Purchase Here](${paymentUrl})\n`;
-        embedDescription += `────────────────\n`;
+        // Enhanced role field with professional formatting
+        fields.push({
+          name: `✨ ${role.name}`,
+          value: `> **$${price.toFixed(2)} USD**\n> 🎯 [**Instant Purchase**](${paymentUrl})\n> ─────────────────────`,
+          inline: true // Use inline for grid layout
+        });
       }
 
-      embed.setDescription(`Available roles in **${interaction.guild?.name}**:\n${embedDescription}`);
-      embed.setFooter({ 
-        text: `${totalRoles} role${totalRoles !== 1 ? 's' : ''} available • Powered by Nexus Panel`,
-        iconURL: interaction.client.user.displayAvatarURL()
-      });
+      // Professional embed with enhanced branding
+      const embed = {
+        title: '🏪 Premium Role Marketplace',
+        description: [
+          `### Welcome to **${interaction.guild?.name}**'s Role Shop! 🌟`,
+          '',
+          '🎭 **Unlock Exclusive Access** • Get special perks, channels, and privileges',
+          '⚡ **Instant Activation** • Roles applied immediately after purchase',
+          '🛡️ **Secure Payment** • Powered by PayPal with buyer protection',
+          '💎 **Premium Experience** • Join our VIP community today',
+          '',
+          '▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬'
+        ].join('\n'),
+        color: 0x5865F2, // Discord brand color for professionalism
+        fields: fields,
+        thumbnail: interaction.guild?.iconURL() ? { 
+          url: interaction.guild.iconURL()! 
+        } : { url: 'https://cdn.discordapp.com/embed/avatars/0.png' },
+        footer: { 
+          text: `🛒 ${monetizedRoles.length} Premium Roles Available • $${totalValue.toFixed(2)} Total Value • Secured by Nexus Panel`,
+          icon_url: 'https://cdn.discordapp.com/embed/avatars/0.png' // Nexus branding
+        },
+        timestamp: new Date().toISOString(),
+        author: {
+          name: `${interaction.guild?.name} • Premium Store`,
+          icon_url: interaction.guild?.iconURL() || 'https://cdn.discordapp.com/embed/avatars/0.png'
+        }
+      };
 
-      await interaction.editReply({ embeds: [embed] });
+      // Add promotional field if more than 8 roles
+      if (monetizedRoles.length > 8) {
+        embed.fields.push({
+          name: '🎪 Additional Premium Roles',
+          value: `> **${monetizedRoles.length - 8} more** exclusive roles available!\n> 🌐 [**View Complete Catalog**](https://app.nexus-panel.com/shop/${guildId})\n> ✨ *Discover all premium options on our web store*`,
+          inline: false
+        });
+      }
+
+      await interaction.editReply({ 
+        content: '', 
+        embeds: [embed] 
+      });
 
     } catch (error) {
       console.error('Error in /shop command:', error);
-      await interaction.editReply('❌ An error occurred while fetching the role shop. Please try again later.');
+      
+      // Enhanced error handling with proper embed
+      const errorEmbed = {
+        title: '❌ Shop Unavailable',
+        description: 'The role shop is temporarily unavailable. Please try again in a few moments.',
+        color: 0xff4757,
+        footer: {
+          text: 'If this issue persists, contact server administrators',
+          icon_url: interaction.client.user.displayAvatarURL()
+        },
+        timestamp: new Date().toISOString()
+      };
+
+      try {
+        await interaction.editReply({ content: '', embeds: [errorEmbed] });
+      } catch (editError) {
+        console.error('Failed to edit reply with error message:', editError);
+        // If edit fails, try to send a followup
+        try {
+          await interaction.followUp({ embeds: [errorEmbed], flags: MessageFlags.Ephemeral });
+        } catch (followupError) {
+          console.error('Failed to send followup error message:', followupError);
+        }
+      }
     }
+  }
+  
+  // Handle admin commands
+  if (interaction.commandName === 'nexus-test') {
+    await nexusTestCommand.execute(interaction);
+    return;
+  }
+  
+  if (interaction.commandName === 'nexus-ticket-panel') {
+    await nexusTicketPanelCommand.execute(interaction);
+    return;
+  }
+  
+  if (interaction.commandName === 'nexus-metrics') {
+    await nexusMetricsCommand.execute(interaction);
+    return;
+  }
+  
+  if (interaction.commandName === 'nexus-lookup') {
+    await nexusLookupCommand.execute(interaction);
+    return;
+  }
+  
+  if (interaction.commandName === 'nexus-autoclose-test') {
+    await nexusAutoCloseTestCommand.execute(interaction);
+    return;
   }
 });
 
@@ -580,6 +803,40 @@ app.get('/health', (req: express.Request, res: express.Response) => {
     bot: client.user ? 'ready' : 'not ready',
     timestamp: new Date().toISOString()
   });
+});
+
+// 🎯 NEW: Bot presence check endpoint for server prioritization
+app.get('/guild/:guildId/presence', (req: express.Request, res: express.Response) => {
+  try {
+    const { guildId } = req.params;
+    
+    if (!guildId) {
+      return res.status(400).json({ 
+        present: false, 
+        error: 'Guild ID is required' 
+      });
+    }
+
+    // Check if bot is present in the guild
+    const guild = client.guilds.cache.get(guildId);
+    const isPresent = !!guild;
+    
+    res.json({ 
+      present: isPresent,
+      guildId: guildId,
+      memberCount: guild?.memberCount || 0,
+      guildName: guild?.name || null,
+      timestamp: new Date().toISOString()
+    });
+    
+  } catch (error: any) {
+    console.error(`Error checking bot presence for guild ${req.params.guildId}:`, error);
+    res.status(500).json({ 
+      present: false, 
+      error: 'Internal server error',
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
 // Update role position endpoint
@@ -830,12 +1087,112 @@ app.post('/role/check', authenticateBot, async (req: express.Request, res: expre
   }
 });
 
+// Deliver digital content via DM endpoint
+app.post('/api/deliver-digital-content', authenticateBot, async (req: express.Request, res: express.Response) => {
+  try {
+    const { userId, bundleName, digitalContent } = req.body;
+
+    if (!userId || !bundleName || !digitalContent) {
+      return res.status(400).json({ 
+        error: 'Bad Request',
+        message: 'Missing required fields: userId, bundleName, digitalContent'
+      });
+    }
+
+    // Get user
+    const user = await client.users.fetch(userId);
+    if (!user) {
+      return res.status(404).json({ 
+        error: 'User not found',
+        message: `Discord user ${userId} not found`
+      });
+    }
+
+    // Create embed with digital content
+    const embed = new EmbedBuilder()
+      .setColor(0x00ff00)
+      .setTitle('🎁 Your Digital Content')
+      .setDescription(`Thank you for purchasing **${bundleName}**! Here is your digital content:`)
+      .setTimestamp();
+
+    // Add each digital content item as a field
+    for (const content of digitalContent) {
+      const emoji = getContentTypeEmoji(content.type);
+      let fieldValue = content.description || content.value;
+      
+      // Add expiration info if applicable
+      if (content.expiresAt) {
+        const expirationDate = new Date(content.expiresAt).toLocaleDateString();
+        fieldValue += `\n⏰ Expires: ${expirationDate}`;
+      }
+      
+      // Add usage limit if applicable
+      if (content.maxUses) {
+        fieldValue += `\n🔢 Max uses: ${content.maxUses}`;
+      }
+
+      embed.addFields({
+        name: `${emoji} ${content.title}`,
+        value: fieldValue,
+        inline: false
+      });
+
+      // For external links, add clickable link
+      if (content.type === 'external_link') {
+        embed.addFields({
+          name: '🔗 Link',
+          value: content.value,
+          inline: false
+        });
+      }
+    }
+
+    // Add footer
+    embed.setFooter({ 
+      text: 'Keep this information safe. Digital content is non-refundable.' 
+    });
+
+    // Send DM
+    await user.send({ embeds: [embed] });
+    
+    console.log(`✅ Digital content delivered to user ${userId} for bundle: ${bundleName}`);
+
+    res.json({ 
+      success: true,
+      message: 'Digital content delivered successfully',
+      userId: userId,
+      bundleName: bundleName,
+      contentCount: digitalContent.length
+    });
+
+  } catch (error: any) {
+    console.error('❌ Error delivering digital content:', error);
+    res.status(500).json({ 
+      error: 'Internal Server Error',
+      message: 'Failed to deliver digital content',
+      details: error.message
+    });
+  }
+});
+
+// Helper function to get emoji for content type
+function getContentTypeEmoji(type: string): string {
+  switch (type) {
+    case 'external_link': return '🔗';
+    case 'discount_code': return '🎫';
+    case 'access_key': return '🔑';
+    case 'instructions': return '📋';
+    default: return '📦';
+  }
+}
+
 // Start HTTP server
 app.listen(HTTP_PORT, '0.0.0.0', () => {
   console.log(`🌐 Bot HTTP server listening on port ${HTTP_PORT}`);
-  console.log(`🎯 Role revocation endpoints available:`);
+  console.log(`🎯 Available endpoints:`);
   console.log(`  - POST /role/remove (remove role from user)`);
   console.log(`  - POST /role/check (check if user has role)`);
+  console.log(`  - POST /api/deliver-digital-content (deliver bundle content via DM)`);
 });
 
 // --- Login ---

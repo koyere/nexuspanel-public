@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2025 Nexus Panel - Koyere Solutions
+Copyright (c) 2025 Nexus Panel
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -19,3 +19,44 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+---
+
+## Additional Terms for Nexus Panel Documentation
+
+This license applies specifically to the documentation, transparency materials, 
+and public information contained in this repository. 
+
+### What's Covered:
+- Documentation files (*.md)
+- Example configurations
+- API documentation
+- Community guidelines
+- Transparency reports
+
+### What's NOT Covered:
+- The actual Nexus Panel Discord Bot source code
+- Proprietary algorithms and implementations
+- Internal configurations and secrets
+- Commercial use of the Nexus Panel brand
+
+### Attribution Requirements:
+When using or referencing this documentation:
+- Maintain copyright notice
+- Credit "Nexus Panel" as the original source
+- Link back to the original repository when possible
+- Respect trademark and branding guidelines
+
+### Commercial Use:
+- Documentation: ✅ Freely usable under MIT license
+- Code examples: ✅ Freely usable under MIT license
+- Branding/Logos: ❌ Requires separate permission
+- Bot implementation: ❌ Not covered by this license
+
+### Trademark Notice:
+"Nexus Panel" is a trademark of the Nexus Panel team. Use of the trademark
+is subject to separate trademark guidelines and is not covered by this MIT
+license.
+
+For questions about licensing or permissions beyond what's covered here,
+please contact: legal@nexus-panel.com
